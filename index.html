@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tracker KA Tanjung Priok</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-white font-sans">
+
+  <div class="max-w-6xl mx-auto py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center px-4">
+      <img src="kci.png" alt="KAI Commuter" class="h-10">
+      <div id="clock" class="text-gray-600 text-sm">Waktu: --:--:--</div>
+    </div>
+
+    <!-- Jalur -->
+    <div class="relative mt-10 h-36 max-w-5xl mx-auto">
+      <!-- Jalur atas (TPK → JAKK) -->
+      <div class="absolute top-[50%] left-[8.3%] right-[7.5%] border-t-4 border-purple-500"></div>
+      <!-- Jalur bawah (JAKK → TPK) -->
+      <div class="absolute top-[70%] left-[8.3%] right-[7.5%] border-t-4 border-blue-400"></div>
+    </div>
+
+    <!-- Stasiun -->
+    <div class="flex justify-between items-end text-center mt-[-8rem] max-w-5xl mx-auto">
+      <div class="flex flex-col items-center">
+        <div class="rounded-full bg-gray-700 w-14 h-36"></div>
+        <span class="font-bold">JAKARTA KOTA</span>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="rounded-full bg-gray-700 w-14 h-36"></div>
+        <span class="font-bold">KAMPUNG BANDAN</span>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="rounded-full bg-gray-700 w-14 h-36"></div>
+        <span class="font-bold">ANCOL</span>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="rounded-full bg-gray-700 w-14 h-36"></div>
+        <span class="font-bold">TANJUNG PRIOK</span>
+      </div>
+    </div>
+  </div>
+
+  
+
+  <div id="active-trains-list" class="max-w-4xl mx-auto mt-10 px-4 text-sm text-gray-800 font-mono"></div>
+<script>
+
+    // 🗺️ Posisi horizontal
+    const stasiunPosisi = {
+      "Jakarta Kota": "left-[7.5%]",
+      "Kampung Bandan": "left-[30%]",
+      "Ancol": "left-[55%]",
+      "Tanjung Priuk": "left-[80%]"
+    };
+    const midPosisi = {
+      "Jakarta Kota-Kampung Bandan": "left-[18%]",
+      "Kampung Bandan-Jakarta Kota": "left-[18%]",
+      "Kampung Bandan-Ancol": "left-[49.5%]",
+      "Ancol-Kampung Bandan": "left-[49.5%]",
+      "Ancol-Tanjung Priuk": "left-[77.5%]",
+      "Tanjung Priuk-Ancol": "left-[77.5%]"
+    };
+
+    // 🕒 Jadwal (contoh, silakan ganti lengkap)
+const jadwalKereta = [
+  // Jakarta Kota → Tanjung Priok
+  { ka: "2200", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["05:00", "05:04", "05:07", "05:16"] },
+  { ka: "2202", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["05:30", "05:34", "05:37", "05:46"] },
+  { ka: "2204", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["06:00", "06:04", "06:07", "06:16"] },
+  { ka: "2206", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["06:30", "06:34", "06:37", "06:46"] },
+  { ka: "2208", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["07:00", "07:04", "07:07", "07:16"] },
+  { ka: "2210", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["07:30", "07:34", "07:37", "07:46"] },
+  { ka: "2212", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["08:00", "08:04", "08:07", "08:16"] },
+  { ka: "2214", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["08:30", "08:34", "08:37", "08:46"] },
+  { ka: "2216", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["09:00", "09:04", "09:07", "09:16"] },
+  { ka: "2218", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["09:30", "09:34", "09:37", "09:46"] },
+  { ka: "2220", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["10:00", "10:04", "10:07", "10:16"] },
+  { ka: "2222", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["10:30", "10:34", "10:37", "10:46"] },
+  { ka: "2224", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["11:00", "11:04", "11:07", "11:16"] },
+  { ka: "2226", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["11:30", "11:34", "11:37", "11:46"] },
+  { ka: "2228", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["12:00", "12:04", "12:07", "12:16"] },
+  { ka: "2230", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["12:30", "12:34", "12:37", "12:46"] },
+  { ka: "2232", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["13:00", "13:04", "13:07", "13:16"] },
+  { ka: "2234", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["13:30", "13:34", "13:37", "13:46"] },
+  { ka: "2236", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["14:00", "14:04", "14:07", "14:16"] },
+  { ka: "2238", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["14:30", "14:34", "14:37", "14:46"] },
+  { ka: "2240", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["15:00", "15:04", "15:07", "15:16"] },
+  { ka: "2242", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["15:30", "15:34", "15:37", "15:46"] },
+  { ka: "2244", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["16:00", "16:04", "16:07", "16:16"] },
+  { ka: "2246", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["16:30", "16:34", "16:37", "16:46"] },
+  { ka: "2248", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["17:00", "17:04", "17:07", "17:16"] },
+  { ka: "2250", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["17:30", "17:34", "17:37", "17:46"] },
+  { ka: "2252", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["18:00", "18:04", "18:07", "18:16"] },
+  { ka: "2254", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["18:30", "18:34", "18:37", "18:46"] },
+  { ka: "2256", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["19:00", "19:04", "19:07", "19:16"] },
+  { ka: "2258", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["19:30", "19:34", "19:37", "19:46"] },
+  { ka: "2260", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["20:00", "20:04", "20:07", "20:16"] },
+  { ka: "2262", arah: "JAKK-TPK", jalur: ["Jakarta Kota", "Kampung Bandan", "Ancol", "Tanjung Priuk"], waktu: ["20:30", "20:34", "20:37", "20:46"] },
+
+  // Tanjung Priuk → Jakarta Kota
+  { ka: "2203", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["05:30", "05:38", "05:42", "05:46"] },
+  { ka: "2205", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["06:00", "06:08", "06:12", "06:16"] },
+  { ka: "2207", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["06:30", "06:38", "06:42", "06:46"] },
+  { ka: "2209", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["07:00", "07:08", "07:12", "07:16"] },
+  { ka: "2211", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["07:30", "07:38", "07:42", "07:46"] },
+  { ka: "2213", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["08:00", "08:08", "08:12", "08:16"] },
+  { ka: "2215", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["08:30", "08:38", "08:42", "08:46"] },
+  { ka: "2217", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["09:00", "09:08", "09:12", "09:16"] },
+  { ka: "2219", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["09:30", "09:38", "09:42", "09:46"] },
+  { ka: "2221", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["10:00", "10:08", "10:12", "10:16"] },
+  { ka: "2223", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["10:30", "10:38", "10:42", "10:46"] },
+  { ka: "2225", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["11:00", "11:08", "11:12", "11:16"] },
+  { ka: "2227", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["11:30", "11:38", "11:42", "11:46"] },
+  { ka: "2229", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["12:00", "12:08", "12:12", "12:16"] },
+  { ka: "2231", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["12:30", "12:38", "12:42", "12:46"] },
+  { ka: "2233", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["13:00", "13:08", "13:12", "13:16"] },
+  { ka: "2235", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["13:30", "13:38", "13:42", "13:46"] },
+  { ka: "2237", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["14:00", "14:08", "14:12", "14:16"] },
+  { ka: "2239", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["14:30", "14:38", "14:42", "14:46"] },
+  { ka: "2241", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["15:00", "15:08", "15:12", "15:16"] },
+  { ka: "2243", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["15:30", "15:38", "15:42", "15:46"] },
+  { ka: "2245", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["16:00", "16:08", "16:12", "16:16"] },
+  { ka: "2247", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["16:30", "16:38", "16:42", "16:46"] },
+  { ka: "2249", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["17:00", "17:08", "17:12", "17:16"] },
+  { ka: "2251", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["17:30", "17:38", "17:42", "17:46"] },
+  { ka: "2253", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["18:00", "18:08", "18:12", "18:16"] },
+  { ka: "2255", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["18:30", "18:38", "18:42", "18:46"] },
+  { ka: "2257", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["19:00", "19:08", "19:12", "19:16"] },
+  { ka: "2259", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["19:30", "19:38", "19:42", "19:46"] },
+  { ka: "2261", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["20:00", "20:08", "20:12", "20:16"] },
+  { ka: "2263", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["20:30", "20:38", "20:42", "20:46"] },
+  { ka: "2265", arah: "TPK-JAKK", jalur: ["Tanjung Priuk", "Ancol", "Kampung Bandan", "Jakarta Kota"], waktu: ["21:00", "21:08", "21:12", "21:16"] }
+];
+
+
+    function parseTime(str) {
+      const [h, m] = str.split(":").map(Number);
+      const t = new Date();
+      t.setHours(h, m, 0, 0);
+      return t;
+    }
+
+    function getActiveTrains() {
+      const now = new Date();
+      const active = [];
+
+      for (const train of jadwalKereta) {
+        const stations = train.jalur;
+        const times = train.waktu.map(parseTime);
+
+        // Muncul sebelum keberangkatan awal (5 menit)
+        const dep = times[0];
+        const showFrom = new Date(dep);
+        showFrom.setMinutes(showFrom.getMinutes() - 5);
+        if (now >= showFrom && now < dep) {
+          active.push({ ka: train.ka, arah: train.arah, pos: stations[0], type: "station" });
+          continue;
+        }
+
+        // Perjalanan atau stasiun selanjutnya
+        for (let i = 0; i < times.length - 1; i++) {
+          const curr = times[i];
+          const next = times[i + 1];
+          if (now >= curr && now < next) {
+            const between = `${stations[i]}-${stations[i + 1]}`;
+            active.push({ ka: train.ka, arah: train.arah, pos: between, type: "between" });
+            break;
+          }
+        }
+
+        // Baru tiba di stasiun akhir (±2 menit)
+        const last = times[times.length - 1];
+        if (Math.abs((now - last) / 60000) <= 2) {
+          active.push({ ka: train.ka, arah: train.arah, pos: stations[stations.length - 1], type: "station" });
+        }
+      }
+
+      return active;
+    }
+
+        function updateClock() {
+      const now = new Date();
+      document.getElementById("clock").textContent =
+        "Current Time: " + now.toLocaleTimeString();
+    }
+
+
+    function showTrainIcons() {
+      const container = document.querySelector(".relative");
+      container.querySelectorAll(".train-marker").forEach(el => el.remove());
+      console.log("Active trains:", getActiveTrains());
+
+      const activeTrains = getActiveTrains();
+
+      activeTrains.forEach(train => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "absolute text-center text-xs train-marker";
+
+        // Posisi vertikal berdasarkan arah
+        if (train.arah === "TPK-JAKK") {
+          wrapper.classList.add(train.type === "station" ? "top-[15%]" : "top-[15%]");
+        } else {
+          wrapper.classList.add(train.type === "station" ? "top-[60%]" : "top-[60%]");
+        }
+
+        // Posisi horizontal
+        if (train.type === "station") {
+          wrapper.classList.add(stasiunPosisi[train.pos]);
+        } else {
+          wrapper.classList.add(midPosisi[train.pos]);
+        }
+
+        // Isi ikon & label
+        const icon = document.createElement("div");
+        icon.textContent = "🚆";
+        icon.className = "text-xl";
+
+
+        const label = document.createElement("div");
+        label.className = "text-black font-bold text-xs";
+        label.textContent = `KA ${train.ka}`;
+
+
+        wrapper.append(icon, label);
+        container.appendChild(wrapper);
+      });
+
+            // Tampilkan daftar KA aktif
+      const listContainer = document.getElementById("active-trains-list");
+      listContainer.innerHTML = ""; // kosongkan dulu
+
+      if (activeTrains.length === 0) {
+        listContainer.textContent = "Tidak ada kereta aktif saat ini.";
+      } else {
+        activeTrains.forEach(train => {
+          const item = document.createElement("div");
+          const icon = "🚆";
+          const pos = train.type === "station" ? train.pos : train.pos.replace("-", "–");
+          const arah = train.arah === "TPK-JAKK" ? "TPK → JAKK" : "JAKK → TPK";
+          item.textContent = `${icon} KA ${train.ka} | Posisi: ${pos} | Arah: ${arah}`;
+          listContainer.appendChild(item);
+        });
+      }
+
+    }
+
+    updateClock();
+    showTrainIcons();
+    setInterval(updateClock, 1000);
+    setInterval(showTrainIcons, 10000);
+  </script>
+</body>
+</html>
